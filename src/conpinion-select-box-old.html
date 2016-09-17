@@ -1,0 +1,729 @@
+<!-- build:process -->
+<!--
+<%= copyright %>
+Element: <%= pkg.name %>
+Version: <%= pkg.version %>
+Description: <%= pkg.description %>
+-->
+<!-- /build -->
+
+<link href="../lib/polymer/polymer.html" rel="import">
+
+<dom-module id="conpinion-select-box-old" tabindex="-1">
+  <template>
+    <style>
+      :host {
+        outline: none;
+      }
+
+      #container {
+        border: 1px solid #ddd;
+        border-radius: 2px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 5px 8px;
+        position: relative;
+        outline: none;
+      }
+
+      #container:hover {
+        cursor: text;
+        border: 1px solid #aaa;
+      }
+
+      #container.focused,
+      #container.focused:hover {
+        box-shadow: inset 0 0 3px #0074d9;
+      }
+
+      #available,
+      #container.focused,
+      #container.focused:hover {
+        border: 1px solid #004080;
+      }
+
+      #input {
+        flex: 1 1;
+        border: none;
+        box-sizing: border-box;
+        display: inline-block;
+        outline: none;
+        font-size: 16px;
+        padding: 0;
+        vertical-align: middle;
+      }
+
+      #input[readonly] {
+        text-decoration: line-through;
+      }
+
+      #available-wrapper {
+        position: absolute;
+        left: -1px;
+        right: -1px;
+        top: 100%;
+      }
+
+      #available {
+        position: relative;
+        border-top: none;
+        border-bottom-right-radius: 2px;
+        border-bottom-left-radius: 2px;
+        z-index: 1;
+        background: #fff;
+        max-height: 36ex;
+        max-height: 255px;
+        overflow-y: auto;
+        display: none;
+      }
+
+      .opened #available {
+        display: block;
+      }
+
+      #opener {
+        position: absolute;
+        right: 5px;
+        top: 25%;
+        cursor: pointer;
+      }
+
+      .choice {
+        border: 1px solid #eee;
+        border-radius: 3px;
+        display: block;
+        padding: 5px;
+        margin: 5px;
+        background: #fafafa;
+        cursor: pointer;
+        box-sizing: border-box;
+      }
+
+      .choice.highlighted {
+        border: 1px solid #bbb;
+        background: #EBF2FC;
+      }
+
+      .choice:hover {
+        border: 1px solid #aaa;
+      }
+
+      ._loading, ._empty {
+        padding: 5px;
+      }
+
+      ._loading {
+        background: 5px center no-repeat url('data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==');
+        padding-left: 28px;
+      }
+
+      .unmatched {
+        color: #e00;
+      }
+
+      .item {
+        color: #3e6d8e;
+        background: #e0eaf1;
+        border-bottom: 1px solid #b3cee1;
+        border-right: 1px solid #b3cee1;
+        padding: 3px 4px;
+        margin: 5px 8px 5px 0;
+        display: inline-block;
+        vertical-align: middle;
+        cursor: pointer;
+        border-radius: 2px;
+      }
+
+      .item:hover {
+        /*background: #ccc;*/
+        border-bottom: 1px solid #666;
+        border-right: 1px solid #666;
+        box-shadow: 0px 0px 3px #aaa;
+      }
+
+      .highlighted {
+        background: #b3cee1;
+        border-bottom: 1px solid #6c9fc6;
+        border-right: 1px solid #6c9fc6;
+      }
+
+      .eliminate {
+        font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif;
+        vertical-align: top;
+        height: 16px;
+        width: 16px;
+        line-height: 16px;
+        text-align: center;
+        font-size: 8px;
+        margin: 2px 0 0 4px;
+        background: #a51c1e;
+        color: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+        display: none;
+        padding-bottom: 2px;
+      }
+
+      .eliminate:hover {
+        background: #C03434;
+      }
+
+      .focused .eliminate {
+        display: inline-block;
+      }
+
+      .item.editing {
+        padding: 1px;
+      }
+
+      .selectionEditor {
+        border: none;
+        border-left: 1px solid #6c9fc6;
+        border-top: 1px solid #6c9fc6;
+        outline: none;
+        padding: 3px 5px;
+      }
+    </style>
+    <div id="container" tabindex="-1"
+         class$="[[_containerClass(_mode, focused, opened)]]">
+      <template is="dom-repeat" items="[[_selected]]">
+        <div
+            class$="[[_selectedItemClass(item.highlighted, item.editing, index, _selected)]]"
+            on-mousedown="_onClickSelected"
+            on-dblclick="_onDoubleClickSelected">
+          <template is="dom-if" if="[[item.editing]]">
+            <input class="selectionEditor"
+                   type="text" value="{{_editQuery::input}}"
+                   size="[[_inputSize(_editQuery::input)]]">
+          </template>
+          <template is="dom-if" if="[[!item.editing]]">[[item.label]]</template>
+          <a class="eliminate" on-mousedown="_onClickEliminate">x</a>
+        </div>
+      </template>
+      <span>[[_selected.length]]</span>
+      <template  is="dom-if" if="[[_canAddSelections(_selected.length)]]">
+        <input id="input"
+               type="text"
+               placeholder="[[_placeholderText(_selected, placeholder)]]"
+               value="{{ _addQuery::input }}"
+               class="[[_inputClass(query, _empty)]]"
+               readonly$="[[_inputReadonly(_mode)]]"
+               on-mousedown="_onFocusInput"
+               on-focus="_onFocusInput">
+      </template>
+      <div id="available-wrapper" tabindex="-1">
+        <div id="available" tabindex="-1">
+          <template is="dom-repeat" items="[[_matched]]">
+            <div class$="[[_availableItemClass(item.highlighted)]]"
+                 on-mousedown="_onClickAvailable"><span>[[ item.label ]]</span>
+            </div>
+          </template>
+          <template is="dom-if" if="[[_loading]]">
+            <div class="_loading">
+              Loading choices ...
+            </div>
+          </template>
+          <template is="dom-if" if="[[_noAvailableItems(_loading, _empty)]]">
+            <div class="_empty">
+              No available choices.
+            </div>
+          </template>
+        </div>
+      </div>
+      <div id="opener">&#x25BC;</div>
+    </div>
+  </template>
+
+  <script type="text/javascript">
+    var SelectBoxUtils = {
+      breakBinding: function(func, marker) {
+        marker = marker || "dontBind";
+        return function() {
+          if (!this[marker]) {
+            this[marker] = true;
+            func.apply(this, arguments);
+            this.async(function() {
+              this[marker] = false;
+            });
+          }
+        }
+      }
+    };
+  </script>
+
+  <script>
+    Polymer({
+      is: 'conpinion-select-box-old',
+      properties: {
+        available: {type: Array, value: [], observer: 'availableChanged'},
+        selected: {type: Array, value: [], observer: 'selectedChanged'},
+        placeholder: {type: String},
+        _selectedFocus: {type: Object, observer: '_selectedFocusChanged'}
+      },
+      observers: [
+        '_modeChanged(_mode)',
+        '_matchedFocusChanged(_matchedFocus)',
+        '_matchedChanged(_matched)',
+        '_selectedChanged(_selected)',
+        '_addQueryChanged(_addQuery)',
+        '_editQueryChanged(_editQuery)'
+      ],
+      _selected: [],
+      _addQuery: "",
+      _editQuery: "",
+      opened: false,
+      focused: false,
+      _mode: null, // edit, add, browse
+      _selectedFocus: undefined,
+      _selectedFocusPos: null,
+      _matchedFocus: undefined,
+      _matchedFocusPos: null,
+      _empty: false,
+      _matched: null,
+
+
+      _containerClass: function(mode, focused, opened) {
+        return mode +
+            (focused ? ' focused' : '') +
+            (opened ? ' opened' : '');
+      },
+      _canAddSelections: function(length) {
+        return length < 1;
+      },
+      _selectedItemClass: function(highlighted, editing, index, selected) {
+        return "item " +
+            (highlighted ? ' highlighted' : '') +
+            (editing ? ' editing' : '') +
+            (index + 1 == selected.length ? ' last' : '')
+      },
+
+      _availableItemClass: function(highlighted) {
+        return 'choice' +
+            (highlighted ? ' highlighted' : '');
+      },
+
+      _inputClass: function(query, empty) {
+          return query.length && empty ? 'unmatched' : ''
+      },
+
+      _placeholderText: function(selected, placeholder) {
+        return selected.length ? '' : (placeholder ? placeholder : 'Type here ...');
+      },
+
+      _noAvailableItems: function(loading, empty) {
+        return !loading && empty;
+      },
+
+      _inputSize: function(query) {
+        return query.length < 5 ? 1 : query.length - 2
+      },
+
+      _inputReadonly: function(mode) {
+        return mode != 'add';
+      },
+
+      ////////////////////////////////////////
+      /////////// PUBLIC INTERFACE ///////////
+      availableChanged: function() {
+        if (this.available) {
+          // TODO, check if newValue is function
+          if (typeof this.available == 'function') {
+            this._available = function(query, callback) {
+              this.available(query, function(data) {
+                callback(this._prepareAvailable(data))
+              }.bind(this))
+            }.bind(this);
+          } else {
+            this._available = this._prepareAvailable(this.available);
+          }
+        } else {
+          this._available = [];
+        }
+        this._filter(this._addQuery);
+      },
+      _selectedChanged: SelectBoxUtils.breakBinding(function() {
+        this.selected = this._selected.map(function(item) {
+          return item.value;
+        });
+      }),
+      selectedChanged: SelectBoxUtils.breakBinding(function() {
+        this._selected = this.selected.map(function(value) {
+          return {highlighted: false, editing: false, value: value, label: value, query: value};
+        });
+      }),
+      ////////////////////////////////////////
+
+      ////// event handlers //////
+      ready: function() {
+        this._selected = [];
+        this._available = [];
+        this._mode = 'add';
+      },
+      attached: function() {
+        this.addEventListener('focus', this._onFocus.bind(this), true);
+        this.addEventListener('blur', this._onBlur.bind(this), true);
+        this.addEventListener('keydown', this._onKeydown.bind(this), true);
+      },
+      _modeChanged: function(mode) {
+        switch (mode) {
+          case 'edit':
+            this.critical = true;
+            this._addQuery = '';
+            this.set("_selected." + this._selectedFocusPos + ".editing", true);
+            this._editQueryChanged(this._selectedFocus.value);
+            this._editQuery = this._selectedFocus.value;
+            this.async(this._focusSelectionEditor);
+            break;
+          case 'add':
+            this._selectedFocus = null;
+            var input2 = this.querySelectorAll("#input");
+            console.log (input2);
+            var input = this.querySelector("#input");
+            if (input) {
+              input.focus();
+            }
+            this._addQueryChanged(this._addQuery);
+            break;
+          case 'browse':
+            this._addQuery = '';
+            this.opened = false;
+            this.critical = true;
+            this.focus();
+            this.critical = false;
+            if (this._selectedFocus) {
+              this.set("_selected." + this._selectedFocusPos + ".editing", false);
+            }
+            break;
+        }
+      },
+      _focusSelectionEditor: function() {
+        var el = this.querySelector('.selectionEditor');
+        el.focus();
+        el.addEventListener('focusout', function() {
+          this._mode = 'browse';
+        }.bind(this));
+        this.critical = false;
+      },
+
+      _addQueryChanged: function(addQuery) {
+        if (this._mode == 'add') {
+          this._updateAvailable(addQuery);
+        }
+      },
+      _editQueryChanged: function(editQuery) {
+        if (this._mode == 'edit') {
+          this._updateAvailable(editQuery);
+        }
+      },
+      _onFocusInput: function(e) {
+        if (!this.critical) {
+            this._mode = 'add';
+            this.opened = true;
+            this.focused = true;
+            this._updateAvailable();
+        }
+      },
+      _onBlur: function(e) {
+        if (!this.critical) {
+          this._selectedFocus = null;
+          this._matchedFocus = null;
+          this.focused = false;
+          this.opened = false;
+        }
+      },
+      _selectedFocusChanged: function(newValue, oldValue) {
+        this._updateFocus('_selected', newValue);
+        if (oldValue) {
+          oldValue.editing = false;
+        }
+        if (!newValue) {
+          this._mode = 'add';
+        }
+      },
+      _matchedFocusChanged: function(matchedFocus) {
+        this._updateFocus('_matched', matchedFocus);
+      },
+      _matchedChanged: function(matched) {
+        this._matchedFocus = matched[0];
+      },
+      _onDoubleClickSelected: function(e) {
+        this.focus();
+        this._mode = 'edit';
+        this._selectedFocus = e.model.item;
+        e.preventDefault();
+      },
+      _onClickSelected: function(e) {
+        this.focus();
+        this._mode = 'browse';
+        this._selectedFocus = e.model.item;
+        e.preventDefault();
+      },
+      _onClickEliminate: function(e) {
+        var index = this._selected.indexOf(e.model.item);
+        if (index != -1) {
+          this.splice('_selected', index, 1);
+        }
+        this._filter(this._addQuery);
+        e.preventDefault();
+      },
+      _onClickAvailable: function(e) {
+        if (this._mode == 'edit') {
+          this._saveMatchedFocus();
+        } else {
+          this._addItemToSelected(e.model.item);
+        }
+        e.preventDefault();
+      },
+      _onFocus: function(e) {
+        this.focused = true;
+
+        if (!this.critical) {
+          this._mode = 'add';
+          this.querySelector("#input").focus();
+        }
+      },
+      _keyDispatch: {
+        browse: {
+          8: ['_browseEliminateHighlighted'],
+          46: ['_browseEliminateHighlighted'],
+          37: ['_navigateSelected', 'prev'],
+          39: function() {
+            if (this._selectedFocusPos == this._selected.length - 1) {
+              this._mode = 'add';
+            } else {
+              this._navigateSelected('next');
+            }
+          },
+          27: function() {
+              this._mode = 'add';
+          },
+          13: function() {
+            this._mode = 'edit';
+          }
+        },
+        edit: {
+          27: function(e) {
+            this._mode = 'browse';
+            this.focus();
+          },
+          13: ['_saveMatchedFocus'],
+        },
+        add: {
+          37: function() {
+            if (this._addQuery.length || !this._selected.length)
+              return true;
+            this._mode = 'browse';
+            this._navigateSelected('prev');
+          },
+          13: function() {
+              this._addItemToSelected(this._matchedFocus);
+          },
+          27: function() {
+            this.opened = false;
+          },
+          8: function() {
+            if (!this._addQuery.length) {
+              this.pop('_selected');
+              this._updateAvailable();
+            } else {
+              return true;
+            }
+          }
+        },
+        36: ['_navigateAvailable', 'first'],
+        33: ['_navigateAvailable', 'prev5'],
+        38: ['_navigateAvailable', 'prev'],
+        34: ['_navigateAvailable', 'next5'],
+        40: ['_navigateAvailable', 'next'],
+        35: ['_navigateAvailable', 'last'],
+      },
+      _onKeydown: function(e) {
+        if (!e.altGraphKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+          var proceed, dispatch = this._keyDispatch[this._mode][e.keyCode] || this._keyDispatch[e.keyCode];
+          if (dispatch) {
+            if (typeof dispatch == 'number' || typeof dispatch == 'string') {
+              dispatch = this._keyDispatch[this._mode][dispatch];
+            }
+            if (typeof dispatch == 'function') {
+              proceed = dispatch.call(this, e);
+            } else {
+              var args = dispatch.slice(1);
+              args.push(e);
+              proceed = this[dispatch[0]].apply(this, args);
+            }
+            if (!proceed) {
+              e.preventDefault();
+            }
+          }
+        }
+      },
+      //// CommonMixin
+
+      _navigate: function(type, direction, start) {
+        var pos = this[type + "FocusPos"], items = this[type];
+        if (pos === null) {
+          pos = start || -1;
+        }
+
+        switch (direction) {
+          case 'prev':
+            pos--;
+            break;
+          case 'prev5':
+            pos -= 5;
+            break;
+          case 'next5':
+            pos += 5;
+            break;
+          case 'prev2':
+            pos -= 2;
+            break;
+          case 'next2':
+            pos += 2;
+            break;
+          case 'next':
+            pos++;
+            break;
+          case 'last':
+            pos = items.length - 1;
+            break;
+          case 'first':
+            pos = 0;
+            break;
+        }
+        if (pos < 0) {
+          pos = 0;
+        }
+        if (pos >= items.length) {
+          pos = items.length - 1;
+        }
+        this[type + "Focus"] = items[pos];
+        if (pos) {
+          return items.length && pos == items.length - 1 ? 1 : 0
+        } else {
+          return -1
+        }
+      },
+      _updateFocus: function(name, value) {
+        this[name + 'FocusPos'] = null;
+        this[name].forEach(function(item, i) {
+          var highlighted = item === value;
+          if (item.highlighted !== highlighted)
+            this.set(name + '.' + i + '.highlighted', highlighted)
+          if (highlighted) {
+            this[name + 'FocusPos'] = i;
+          }
+        }, this)
+      },
+      _prepareAvailable: function(values) {
+        return values.map(function(value, i) {
+          if (typeof value == "string") {
+            if (!value || !value.length) {
+              throw "Can't accept falsy value in choices list. Item " + i + ": `" + value + "`";
+            }
+            return {highlighted: false, value: value, label: value};
+          } else {
+            return value;
+          }
+        });
+      },
+
+      //// SelectedBrowsingMixin
+
+      _browseEliminateHighlighted: function() {
+        if (this._selected.length) {
+          this.splice ("_selected", this._selectedFocusPos, 1);
+          this._selectedFocus = this._selected[this._selectedFocusPos] || this._selected[this._selectedFocusPos - 1];
+        }
+      },
+      _saveMatchedFocus: function() {
+        if (this._matchedFocus) {
+          this.set("_selected." + this._selectedFocusPos + ".label", this._matchedFocus.label);
+          this.set("_selected." + this._selectedFocusPos + ".value", this._matchedFocus.value);
+          this._mode = 'browse';
+          this.critical = true;
+          this._mode = 'add';
+          this.focused = true
+          this.querySelector("#input").focus();
+        }
+      },
+      _navigateSelected: function(direction) {
+        if (this._selected.length) {
+          this._navigate('_selected', direction, this._selected.length);
+        }
+      },
+
+      //// AvailableDropdownMixin));
+      _isAvailable: function(item) {
+        if (this._selected) {
+          return !this._selected.filter(function(i) {
+            return !i.editing && i.value == item.value;
+          }).length;
+        } else {
+          return true;
+        }
+      },
+      _isMatch: function(item, query) {
+        return !query || !query.length || item.label.toString().indexOf(query) >= 0;
+      },
+      _filter: function(value) {
+        if (typeof this._available == "function") {
+          this._loading = true;
+          this._matched = [];
+          this._available(value, function(data) {
+            this._updateMatched(data, value);
+          }.bind(this));
+        } else {
+          this._updateMatched(this._available, value);
+        }
+      },
+      _updateMatched: function(data, value) {
+        this._matched = data.filter(function(item) {
+          item.highlighted = false;
+          return this._isAvailable(item) && this._isMatch(item, value);
+        }, this);
+        this._empty = !this._matched.length;
+        this._loading = false;
+        if (this._matched.length) {
+          this._matched[0].highlighted = true;
+        }
+      },
+      _updateAvailable: function(query) {
+        this._filter(query || this._addQuery);
+        this._navigateAvailable('first');
+      },
+      _navigateAvailable: function(direction) {
+        if (this._mode == 'browse' && this._matched < 2)
+          return true;
+        this.opened = true;
+        this.async(this._scrollAvailable, [this._navigate('_matched', direction), direction]);
+      },
+
+      _addItemToSelected: function(item) {
+        if (item) {
+          this.push('_selected', {highlighted: false, editing: false, value: item.value, label: item.label, query: item.value});
+          this._addQuery = '';
+          this._updateAvailable();
+        }
+      },
+      _scrollAvailable: function(boundary, direction) {
+        var highlighted = this.$.available.querySelector('.highlighted'),
+            available = this.$.available,
+            container = this.$.container;
+        if (!boundary) {
+          if (highlighted) {
+            if (available.scrollTop > highlighted.offsetTop) {
+              available.scrollTop = highlighted.offsetTop - available.clientHeight + highlighted.offsetHeight + parseInt(window.getComputedStyle(highlighted).marginTop);
+            }
+            else if (available.clientHeight + available.scrollTop < highlighted.offsetHeight + highlighted.offsetTop) {
+              available.scrollTop = highlighted.offsetTop - parseInt(window.getComputedStyle(highlighted).marginTop);
+            }
+          }
+        } else {
+          available.scrollTop = boundary > 0 ? this.$.available.scrollHeight : 0;
+        }
+      }
+    });
+  </script>
+</dom-module>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>conpinion-select-box basic tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <script src="../lib/webcomponentsjs/webcomponents.js"></script>
+  <script src="../lib/web-component-tester/browser.js"></script>
+  <script src="../lib/test-fixture/test-fixture-mocha.js"></script>
+  <script src="../lib/coffee-script/extras/coffee-script.js"></script>
+  <link rel="import" href="../lib/test-fixture/test-fixture.html">
+  <link rel="import" href="../build/conpinion-select-box.html">
+</head>
+
+<body>
+
+  <test-fixture id="element">
+    <template>
+      <conpinion-select-box label="A label"></conpinion-select-box>
+    </template>
+  </test-fixture>
+
+  <script type="text/coffeescript">
+
+    element = null
+
+    describe 'basic dom structure', ->
+      beforeEach -> element = fixture 'element'
+
+      it 'should contain an input', ->
+        expect(element.querySelector('input')).to.be.ok
+
+      it 'should contain a label', ->
+        expect(element.querySelector('label').textContent).to.equal 'A label'
+
+      it 'should contain a paper-item for each selected item', (done) ->
+        element._selectedItems = [{label: 'a'}, {label: 'b'}]
+        flush ->
+          items = (item for item in element.querySelectorAll('paper-item.selectedItem'))
+          expect(items.length).to.equal 2
+          expect(items[0].textContent.trim()).to.equal 'a'
+          expect(items[1].textContent.trim()).to.equal 'b'
+          done()
+
+  </script>
+
+</body>
+
+</html>

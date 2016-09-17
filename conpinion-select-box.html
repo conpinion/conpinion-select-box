@@ -1,0 +1,357 @@
+
+<!--
+Copyright (c) 2015 TELCAT MULTICOM GmbH. All rights reserved.
+Copyright (c) 2016 conpinion GbR. All rights reserved.
+
+Element: conpinion-select-box
+Version: 0.2.10
+Description: A Polymer 1.0 fork of the polymer-select-box element
+-->
+
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-dropdown/iron-dropdown.html">
+<link rel="import" href="../iron-form-element-behavior/iron-form-element-behavior.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-input/iron-input.html">
+<link rel="import" href="../paper-input/paper-input-behavior.html">
+<link rel="import" href="../paper-input/paper-input-char-counter.html">
+<link rel="import" href="../paper-input/paper-input-container.html">
+<link rel="import" href="../paper-input/paper-input-error.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-material/paper-material.html">
+<link rel="import" href="../paper-ripple/paper-ripple.html">
+
+<dom-module id="conpinion-select-box">
+
+  <template>
+
+<style >:host {
+  display: block;
+}
+input::-webkit-input-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+input:-moz-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+input::-moz-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+input:-ms-input-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+paper-input-container label {
+  line-height: 30px !important;
+}
+paper-material {
+  border-radius: 2px;
+  background-color: var(--primary-background-color);
+}
+#multiselect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  position: relative;
+  min-height: 30px;
+}
+#input {
+  flex: 1 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+.selectedItem {
+  margin: 2px 4px 2px 0;
+  padding: 0 4px;
+  min-height: 24px;
+  border: 1px solid lightgrey;
+}
+</style>
+
+    <div id="dropdownTrigger" on-tap="_toggleSuggestions">
+      <!--<paper-ripple></paper-ripple>-->
+
+      <paper-input-container no-label-float="[[noLabelFloat]]"
+                             always-float-label="[[_computeFloatLabel(alwaysFloatLabel,_inputFieldText,_selectedItems.*,placeholder)]]"
+                             auto-validate$="[[autoValidate]]" disabled$="[[disabled]]" invalid="[[invalid]]">
+
+        <label hidden$="[[!label]]">[[label]]</label>
+
+        <div id="multiselect">
+
+          <template is="dom-repeat" items="{{_selectedItems}}">
+            <paper-item class="selectedItem">
+              <span>[[item.label]]</span>
+              <iron-icon icon="close" on-tap="_unselectItem"></iron-icon>
+            </paper-item>
+          </template>
+
+          <input is="iron-input" id="input"
+                 on-keydown="_handleKeyDown"
+                 value="{{_labelInput::input}}"
+                 aria-labelledby$="[[_ariaLabelledBy]]"
+                 aria-describedby$="[[_ariaDescribedBy]]"
+                 disabled$="[[disabled]]"
+                 bind-value="{{value}}"
+                 invalid="{{invalid}}"
+                 prevent-invalid-input="[[preventInvalidInput]]"
+                 allowed-pattern="[[allowedPattern]]"
+                 validator="[[validator]]"
+                 type$="[[type]]"
+                 pattern$="[[pattern]]"
+                 required$="[[required]]"
+                 autocomplete$="[[autocomplete]]"
+                 autofocus$="[[autofocus]]"
+                 inputmode$="[[inputmode]]"
+                 minlength$="[[minlength]]"
+                 maxlength$="[[maxlength]]"
+                 min$="[[min]]"
+                 max$="[[max]]"
+                 step$="[[step]]"
+                 name$="[[name]]"
+                 placeholder$="[[placeholder]]"
+                 readonly$="[[readonly]]"
+                 list$="[[list]]"
+                 size$="[[size]]"
+                 autocapitalize$="[[autocapitalize]]"
+                 autocorrect$="[[autocorrect]]"
+                 hidden$="[[!_itemsCanBeAdded(_selectedItems.*, maximum)]]">
+        </div>
+
+        <template is="dom-if" if="[[errorMessage]]">
+          <paper-input-error>[[errorMessage]]</paper-input-error>
+        </template>
+
+        <template is="dom-if" if="[[charCounter]]">
+          <paper-input-char-counter></paper-input-char-counter>
+        </template>
+
+      </paper-input-container>
+    </div>
+
+    <iron-dropdown id="dropdown"
+                   vertical-align="top"
+                   horizontal-align="left"
+                   vertical-offset="[[_computeMenuVerticalOffset(noLabelFloat)]]"
+                   disabled="[[disabled]]"
+                   no-animations="[[noAnimations]]"
+                   opened="{{opened}}">
+
+      <paper-material class="dropdown-content">
+        <paper-menu class="dropdown-content">
+          <template is="dom-repeat" items="[[suggestions]]">
+            <paper-item on-tap="_selectItemBySuggestion" class="selectableItem">[[item.label]]</paper-item>
+          </template>
+        </paper-menu>
+      </paper-material>
+
+    </iron-dropdown>
+
+  </template>
+
+<script type="text/javascript">(function() {
+  Polymer({
+    is: 'conpinion-select-box',
+    behaviors: [Polymer.IronFormElementBehavior, Polymer.PaperInputBehavior, Polymer.IronControlState],
+    properties: {
+      selectables: {
+        type: Array,
+        value: function() {
+          return [];
+        }
+      },
+      selected: {
+        type: Array,
+        notify: true,
+        value: function() {
+          return [];
+        }
+      },
+      suggestions: {
+        type: Array,
+        notify: true,
+        readOnly: true,
+        computed: '_computeSuggestions(_selectableItems, _selectedItems.*, _inputFieldText)'
+      },
+      simpleItems: {
+        type: Boolean,
+        value: false
+      },
+      itemIdProperty: {
+        type: String,
+        value: 'id'
+      },
+      itemLabelProperty: {
+        type: String,
+        value: 'label'
+      },
+      maximum: {
+        type: Number,
+        value: null
+      }
+    },
+    observers: ['_selectablesChanged(selectables.*, simpleItems, itemIdProperty, itemLabelProperty)', '_selectedChanged(selected.*, simpleItems, itemIdProperty, itemLabelProperty)', '_selectedItemsChanged(_selectedItems.splices)', '_labelInputChanged(_labelInput)'],
+    _showFloatLabel: false,
+    _selectableItems: [],
+    _selectedItems: [],
+    _selectedChangedObserverEnabled: true,
+    attached: function() {
+      return this.set('_inputFieldText', '');
+    },
+    _selectablesChanged: function() {
+      return this._selectableItems = this._convertItems(this.selectables);
+    },
+    _selectedChanged: function() {
+      if (this._selectedChangedObserverEnabled && this.selected) {
+        return this._selectedItems = this._convertItems(this.selected);
+      }
+    },
+    _selectedItemsChanged: function(selectedItemsSplices) {
+      return this._withDisabledSelectedChangedObserver((function(_this) {
+        return function() {
+          return _this.selected = _this._selectedItems.map(function(item) {
+            var i;
+            if (_this.simpleItems) {
+              return item.label;
+            } else {
+              return ((function() {
+                var j, len, ref, results;
+                ref = this.selectables;
+                results = [];
+                for (j = 0, len = ref.length; j < len; j++) {
+                  i = ref[j];
+                  if (i[this.itemIdProperty] === item.id) {
+                    results.push(i);
+                  }
+                }
+                return results;
+              }).call(_this))[0];
+            }
+          });
+        };
+      })(this));
+    },
+    _convertItems: function(items) {
+      return items.map((function(_this) {
+        return function(item) {
+          return {
+            id: _this.simpleItems ? item : item[_this.itemIdProperty],
+            label: _this.simpleItems ? item : _this.itemLabelProperty.split('.').reduce((function(o, x) {
+              return o[x];
+            }), item)
+          };
+        };
+      })(this));
+    },
+    _computeSuggestions: function(selectableItems, selectedChangeRecord, inputFieldText) {
+      return selectableItems.filter((function(_this) {
+        return function(item) {
+          var alreadySelected;
+          alreadySelected = _this._selectedItems.filter(function(selectedItem) {
+            return item.id === selectedItem.id;
+          });
+          if (alreadySelected.length > 0) {
+            return false;
+          }
+          return RegExp(".*" + inputFieldText + ".*").test(item.label);
+        };
+      })(this));
+    },
+    _labelInputChanged: function(label) {
+      if (label !== '') {
+        return this.$.dropdown.open();
+      }
+    },
+    _handleKeyDown: function(e) {
+      var label;
+      if (e.keyCode === 13) {
+        label = e.srcElement.value;
+        if (label !== '') {
+          return this._selectItemByLabel(label);
+        }
+      }
+    },
+    _computeFloatLabel: function(alwaysFloatLabel, inputFieldText, selectedItemsSplices, placeholder) {
+      var showFloatLabel;
+      showFloatLabel = alwaysFloatLabel || inputFieldText !== '' || this._selectedItems.length > 0 ? true : false;
+      return this._computeAlwaysFloatLabel(showFloatLabel, placeholder);
+    },
+    _clearInput: function() {
+      return this._labelInput = '';
+    },
+    _unselectItem: function(e) {
+      var itemId, itemIndex;
+      itemId = e.model.item.id;
+      itemIndex = this._selectedItems.map(function(x) {
+        return x.id;
+      }).indexOf(itemId);
+      return this.splice('_selectedItems', itemIndex, 1);
+    },
+    _selectItemBySuggestion: function(e) {
+      this._selectItemById(e.model.item.id);
+      if (!this._itemsCanBeAdded()) {
+        return this.$.dropdown.close();
+      }
+    },
+    _selectItemByLabel: function(label) {
+      var existingSelectablesItem;
+      if (this._selectedItems.filter(function(i) {
+        return i.label === label;
+      }).length !== 0) {
+        return;
+      }
+      existingSelectablesItem = this._selectableItems.filter(function(i) {
+        return i.label === label;
+      });
+      if (this.simpleItems) {
+        this.push('_selectedItems', {
+          id: label,
+          label: label
+        });
+        return this._clearInput();
+      } else if (existingSelectablesItem.length !== 0) {
+        return this._selectItemById(existingSelectablesItem[0].id);
+      }
+    },
+    _selectItemById: function(itemId) {
+      var selectedItem;
+      selectedItem = this._selectableItems.filter(function(item) {
+        return item.id === itemId;
+      });
+      this.push('_selectedItems', selectedItem[0]);
+      return this._clearInput();
+    },
+    _computeMenuVerticalOffset: function(noLabelFloat) {
+      if (noLabelFloat) {
+        return -4;
+      } else {
+        return 68;
+      }
+    },
+    _withDisabledSelectedChangedObserver: function(f) {
+      this._selectedChangedObserverEnabled = false;
+      f.apply();
+      return this._selectedChangedObserverEnabled = true;
+    },
+    _itemsCanBeAdded: function() {
+      if (this.maximum) {
+        return this._selectedItems.length < this.maximum;
+      } else {
+        return true;
+      }
+    },
+    _isSuggestionsEnabled: function() {
+      return !this.disabled && this._itemsCanBeAdded();
+    },
+    _toggleSuggestions: function() {
+      if (this._itemsCanBeAdded()) {
+        return this.$.dropdown.toggle();
+      }
+    }
+  });
+
+}).call(this);
+</script>
+
+</dom-module>

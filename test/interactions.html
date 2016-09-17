@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>conpinion-select-box interaction tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <script src="../lib/webcomponentsjs/webcomponents.js"></script>
+  <script src="../lib/web-component-tester/browser.js"></script>
+  <script src="../lib/test-fixture/test-fixture-mocha.js"></script>
+  <script src="../lib/coffee-script/extras/coffee-script.js"></script>
+  <script src="../lib/jquery/dist/jquery.js"></script>
+  <script src="../lib/happen/happen.js"></script>
+  <link rel="import" href="../lib/test-fixture/test-fixture.html">
+  <link rel="import" href="../build/conpinion-select-box.html">
+</head>
+
+<body>
+
+<test-fixture id="object-select">
+  <template>
+    <conpinion-select-box
+        selectables='[{"id": 1, "label": "alice"},{"id": 2, "label": "bob"},{"id": 3, "label": "carol"}]'>
+    </conpinion-select-box>
+  </template>
+</test-fixture>
+
+<test-fixture id="simple-select">
+  <template>
+    <conpinion-select-box simple-items selectables='["alice", "bob", "carol"]'></conpinion-select-box>
+  </template>
+</test-fixture>
+
+
+<test-fixture id="limited-select">
+  <template>
+    <conpinion-select-box simple-items maximum="2" selectables='["alice", "bob", "carol"]'></conpinion-select-box>
+  </template>
+</test-fixture>
+
+<script type="text/coffeescript">
+
+  element = null
+
+  describe 'tapping a selected item', ->
+    beforeEach -> element = fixture 'object-select'
+
+    it 'should remove the item', (done) ->
+      element.selected = element.selectables
+      flush ->
+        console.log element._selectedItems[0].label
+        items = (item for item in element.querySelectorAll('paper-item.selectedItem'))
+        $(items[1].querySelector('iron-icon')).trigger 'click'
+        expect(element.selected).to.eql [{id: 1, label: 'alice'}, {id: 3, label: 'carol'}]
+        done()
+
+  describe 'with simple (strings, numbers) items', ->
+    beforeEach -> element = fixture 'simple-select'
+
+    describe 'entering a new item in the input field', ->
+      it 'should add the new item to the selected list', ->
+        element.querySelector('#input').value = 'dave'
+        happen.once element.querySelector('#input'), type: 'keydown', keyCode: 13
+        expect(element.selected).to.eql ['dave']
+
+  describe 'with object items', ->
+    beforeEach -> element = fixture 'object-select'
+
+    describe 'entering a new item in the input field', ->
+      it 'should not add the new item to the selected list', ->
+        element.querySelector('#input').value = 'dave'
+        happen.once element.querySelector('#input'), type: 'keydown', keyCode: 13
+        expect(element.selected).to.eql []
+
+    describe 'entering the label of an existing item in the input field', ->
+      it 'should add the item to the selected list', ->
+        element.querySelector('#input').value = 'bob'
+        happen.once element.querySelector('#input'), type: 'keydown', keyCode: 13
+        expect(element.selected).to.eql [{id: 2, label: 'bob'}]
+
+  describe 'limiting the maximum number of items that the user can select', ->
+    beforeEach -> element = fixture 'limited-select'
+
+    describe 'if more items can be selected', ->
+      it 'should show the label input field', ->
+        expect(element.querySelector('#input').hasAttribute('hidden')).to.be.false
+
+      it 'should open the suggestions when clicked', ->
+        happen.once element.querySelector('#dropdownTrigger'), type: 'click'
+        expect(element.querySelector('#dropdown').opened).to.be.true
+
+      it 'should close the suggestions when the maximum item was added', (done) ->
+        element.selected = [{id: 1, 'alice'}]
+        flush ->
+          happen.once element.querySelector('#dropdownTrigger'), type: 'click'
+          happen.once element.querySelector('paper-item.selectableItem'), type: 'click'
+          expect(element.querySelector('#dropdown').opened).to.be.false
+          done()
+
+      it 'should leave the suggestions open when more items can be added', (done) ->
+        flush ->
+          happen.once element.querySelector('#dropdownTrigger'), type: 'click'
+          happen.once element.querySelector('paper-item.selectableItem'), type: 'click'
+          expect(element.querySelector('#dropdown').opened).to.be.true
+          done()
+
+    describe 'if the maximum number of items is selected', ->
+      beforeEach -> element.selected = ['alice', 'bob']
+
+      it 'should hide the label input field', ->
+        expect(element.querySelector('#input').hasAttribute('hidden')).to.be.true
+
+      it 'should prevent the suggestions from opening', ->
+        happen.once element.querySelector('#dropdownTrigger'), type: 'click'
+        expect(element.querySelector('#dropdown').opened).to.be.false
+
+</script>
+
+</body>
+
+</html>

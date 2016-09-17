@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>conpinion-select-box web component</title>
+  <script src='lib/webcomponentsjs/webcomponents-lite.min.js'></script>
+  <link rel="import" href="build/conpinion-select-box.html">
+</head>
+
+<body>
+
+<h1>conpinion-select-box web component</h1>
+
+<p>
+  <a href="test/index.html">Click here to run the tests...</a>
+</p>
+
+<p>
+  <a href="README.md">Click here to read the documentation...</a>
+</p>
+
+<p>
+  <a href="CHANGELOG.md">Click here to read the changelog...</a>
+</p>
+
+<h2>Demo</h2>
+
+<template id="index-template" is="dom-bind">
+
+  <div>
+    <h3>Object Input</h3>
+
+    <conpinion-select-box label="Elements:" placeholder="Elements..." selectables="[[itemChoices]]"
+                       item-label-property="data.name"
+                       selected="{{itemSelection}}"></conpinion-select-box>
+
+    <section style="margin-left: 200px">
+      <h4>Current Selection:</h4>
+      <template is="dom-repeat" items="[[itemSelection]]">
+        <div>[[item.data.name]]</div>
+      </template>
+    </section>
+  </div>
+
+  <div>
+    <h3>Simple Input</h3>
+
+    <conpinion-select-box label="Fruits:" selectables="[[simpleChoices]]" selected="{{simpleSelection}}"
+                       simple-items></conpinion-select-box>
+
+    <section style="margin-left: 200px">
+      <h4>Current Selection:</h4>
+      <template is="dom-repeat" items="[[simpleSelection]]">
+        <div>[[item]]</div>
+      </template>
+    </section>
+  </div>
+
+  <div>
+    <h3>Simple Input with limited number of selectable items</h3>
+
+    <conpinion-select-box label="Friends:" selectables="[[limitedChoices]]" selected="{{limitedSelection}}" simple-items
+                       maximum="2"></conpinion-select-box>
+    <section style="margin-left: 200px">
+      <h4>Current Selection:</h4>
+      <template is="dom-repeat" items="[[limitedSelection]]">
+        <div>[[item]]</div>
+      </template>
+    </section>
+  </div>
+
+  <div>
+    <h3>Simple Input with one selectable item</h3>
+
+    <conpinion-select-box label="Best buddy:" selectables="[[singleChoices]]" selected="{{singleSelection}}" simple-items
+                       maximum="1"></conpinion-select-box>
+    <section style="margin-left: 200px">
+      <h4>Current Selection:</h4>
+      <template is="dom-repeat" items="[[singleSelection]]">
+        <div>[[item]]</div>
+      </template>
+    </section>
+  </div>
+
+</template>
+
+<div class="slack"></div>
+
+<script>
+  var t = document.querySelector('#index-template');
+  t.itemSelection = [];
+  t.itemChoices = [
+    {id: 1, data: {name: "element1"}},
+    {id: 2, data: {name: "element2"}},
+    {id: 3, data: {name: "element3"}},
+    {id: 4, data: {name: "element4"}}
+  ];
+  t.simpleSelection = ['apple'];
+  t.simpleChoices = ['apple', 'orange', 'banana', 'pear', 'kiwi'];
+
+  t.limitedSelection = ['alice'];
+  t.limitedChoices = ['alice', 'bob', 'carol', 'dave', 'eric'];
+
+  t.singleChoices = ['alice', 'bob', 'carol', 'dave', 'eric'];
+</script>
+
+<script src="//localhost:35729/livereload.js"></script>
+
+</body>
+
+</html>

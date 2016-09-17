@@ -1,0 +1,48 @@
+{
+  "name": "conpinion-select-box",
+  "description": "A Polymer 1.0 fork of the polymer-select-box element",
+  "version": "0.2.10",
+  "main": "conpinion-select-box.html",
+  "license": "MIT",
+  "ignore": [
+    "bin",
+    "build",
+    "lib",
+    "node_modules",
+    "src",
+    "test",
+    "tmpl",
+    "package.json",
+    "**/.*",
+    "**/*.log",
+    "**/*.sublime-*",
+    "atlassian-ide-plugin.xml"
+  ],
+  "keywords": [
+    "web-components"
+  ],
+  "authors": [
+    "Ionel Cristian Mărieș <contact@ionelmc.ro>",
+    "Dirk Grappendorf <dirk.grappendorf@conpinion.de>"
+  ],
+  "homepage": "https://github.com/conpinion/conpinion-select-box",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/conpinion/conpinion-select-box.git"
+  },
+  "dependencies": {
+    "iron-dropdown": "PolymerElements/iron-dropdown#^1.0.6",
+    "iron-icons": "PolymerElements/iron-icons#^1.0.4",
+    "paper-input": "PolymerElements/paper-input#^1.0.15",
+    "paper-item": "PolymerElements/paper-item#^1.0.3",
+    "paper-material": "PolymerElements/paper-material#^1.0.2",
+    "paper-ripple": "PolymerElements/paper-ripple#^1.0.3"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.10.0",
+    "jquery": "^2.1.4",
+    "happen": "^0.2.0",
+    "web-component-tester": "Polymer/web-component-tester#^3.3.25",
+    "test-fixture": "PolymerElements/test-fixture#^1.0.0"
+  }
+}

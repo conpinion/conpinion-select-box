@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+input::-webkit-input-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+
+input:-moz-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+
+input::-moz-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+
+input:-ms-input-placeholder {
+  color: var(--paper-input-container-color, --secondary-text-color);
+}
+
+paper-input-container label {
+  line-height: 30px !important;
+}
+
+paper-material {
+  border-radius: 2px;
+  background-color: var(--primary-background-color);
+}
+
+#multiselect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  position: relative;
+  min-height: 30px;
+}
+
+#input {
+  flex: 1 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.selectedItem {
+  margin: 2px 4px 2px 0;
+  padding: 0 4px;
+  min-height: 24px;
+  border: 1px solid lightgrey;
+}
